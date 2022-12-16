@@ -4,49 +4,51 @@ import numpy as np
 from PIL import Image
 
 
-def get_dataset():
+def get_dataset(path):
     """
-    Function for loading data from train.csv.
+    Function for loading data from csv file
 
     Parameters
     ----------
-        None
+        path : string
+            path of the data(csv).
 
     Returns
     -------
-        train_features : ndarray
-            train data of MNIST. shape = (42000, 28, 28)
-        train_label : ndarray
-            train label of MNIST. shape = (42000,)
+        features : ndarray
+            data of MNIST. shape = (, 28, 28, 1)
+        label : ndarray
+            label of MNIST. shape = (,)
     """
     # Load train.csv by using pandas
-    train_data = pd.read_csv("./data/train.csv")
+    data = pd.read_csv(path)
 
     # Separate label from csv data
-    train_features = train_data.copy()
-    train_label = train_features.pop("label")
+    features = data.copy()
+    label = features.pop("label")
 
     # Change type of features and label into ndarray
-    train_features = np.array(train_features)
-    train_label = np.array(train_label)
+    features = np.array(features)
+    label = np.array(label)
 
     # Change the shape of train features from (, 784) to (, 28, 28)
-    train_features = np.reshape(train_features, (-1, 28, 28))
+    features = np.reshape(features, (-1, 28, 28, 1))
 
-    return train_features, train_label
+    return features, label
 
 
 # For debugging
 if __name__ == "__main__":
-    data, label = get_dataset()
+    image, label = get_dataset("./data/train.csv")
 
-    print(data.shape)
+    print(image.shape)
     print(label.shape)
 
-    print(type(data))
+    print(type(image))
     print(type(label))
 
-    x = np.asarray(data[0], dtype=np.uint8)
+    x = np.asarray(image[0], dtype=np.uint8)
+    x = np.reshape(x, (28, 28))
 
     pil_image = Image.fromarray(x)
     pil_image.show()
