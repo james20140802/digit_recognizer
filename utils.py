@@ -1,10 +1,11 @@
 """Module for loading csv data, converting it into numpy array, and checking whether data is loaded properly."""
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 from PIL import Image
 
 
-def get_dataset(path):
+def get_data(path):
     """
     Function for loading data from csv file
 
@@ -37,6 +38,35 @@ def get_dataset(path):
     return features, label
 
 
+def split_validation(features, label, validation_num):
+    """
+    Split data into two.(one for training, the other for validation)
+
+    Parameters
+    ----------
+        features : ndarray
+            data.
+        label : ndarray
+            data.
+        validation_num : int
+            number of validation data.
+
+    Returns
+    -------
+        train_features : ndarray
+        train_label : ndarray
+        validation_features : ndarray
+        validation_label : ndarray
+    """
+    train_features = features[validation_num:]
+    train_label = label[validation_num:]
+
+    validation_features = features[:validation_num]
+    validation_label = label[:validation_num]
+
+    return train_features, train_label, validation_features, validation_label
+
+
 def preprocess(data):
     """
     Function for preprocessing image data.
@@ -55,9 +85,68 @@ def preprocess(data):
     return preprocessed
 
 
+def get_dataset(features, label, batch_size):
+    """
+    Change list(ndarray) into tensorflow Dataset.
+
+    Parameters
+    ----------
+        features : ndarray
+        label : ndarray
+        batch_size : int
+
+    Returns
+    -------
+        dataset : tf.data.Dataset
+    """
+    dataset = (
+        tf.data.Dataset.from_tensor_slices((features, label))
+        .shuffle(10000)
+        .batch(batch_size)
+    )
+
+    return dataset
+
+
+def get_train_dataset(path, validation_num, batch_size):
+    """
+    Get train dataset and validation data from path:
+
+    Parameters
+    ----------
+        path : string
+            path of the data(csv).
+        validation_num : int
+            number of validation data.
+        batcb_size : int
+
+    Returns
+    -------
+        train_dataset : tf.keras.Dataset
+        validation_dataset : tf.keras.Dataset
+    """
+    features, label = get_data(path)
+
+    features = preprocess(features)
+
+    (
+        train_features,
+        train_label,
+        validation_features,
+        validation_label,
+    ) = split_validation(features, label, validation_num)
+
+    train_dataset = get_dataset(train_features, train_label, batch_size)
+    validation_dataset = get_dataset(
+        validation_features, validation_label, batch_size
+    )
+
+    return train_dataset, validation_dataset
+
+
 # For debugging
 if __name__ == "__main__":
-    images, labels = get_dataset("./data/train.csv")
+    images, labels = get_data("./data/train.csv")
 
     print(images.shape)
     print(labels.shape)
