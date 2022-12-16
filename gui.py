@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QGroupBox
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import pyqtSlot
 import pyqtgraph
 from pyqtgraph.Qt import QtGui
@@ -16,6 +17,13 @@ from pyqtgraph.Qt import QtCore
 class Main(QWidget):
     def __init__(self):
         super().__init__()
+
+        # Define variables for saving metrics.
+        self.epoch = []
+        self.train_accuracy = []
+        self.train_loss = []
+        self.validation_accuracy = []
+        self.validation_loss = []
 
         # Create layout.
         hbox1 = QHBoxLayout()
@@ -56,16 +64,10 @@ class Main(QWidget):
         )
 
         # Generate graph title.
-        self.train_accuracy_graph.setTitle(
-            "Train Accuracy", color="#828282", size="12pt"
-        )
+        self.train_accuracy_graph.setTitle("Train Accuracy", color="#828282", size="12pt")
         self.train_loss_graph.setTitle("Train Loss", color="#828282", size="12pt")
-        self.validation_accuracy_graph.setTitle(
-            "Validation Accuracy", color="#828282", size="12pt"
-        )
-        self.validation_loss_graph.setTitle(
-            "Validation Loss", color="#828282", size="12pt"
-        )
+        self.validation_accuracy_graph.setTitle("Validation Accuracy", color="#828282", size="12pt")
+        self.validation_loss_graph.setTitle("Validation Loss", color="#828282", size="12pt")
 
         # Set graph title font.
         self.train_accuracy_graph.getPlotItem().titleLabel.item.setFont(font)
@@ -81,22 +83,16 @@ class Main(QWidget):
 
         # Set graph pen.
         self.train_accuracy_curve = self.train_accuracy_graph.plot(
-            pen=pyqtgraph.mkPen(
-                color=(203, 26, 126), width=3, style=QtCore.Qt.SolidLine
-            )
+            pen=pyqtgraph.mkPen(color=(203, 26, 126), width=3, style=QtCore.Qt.SolidLine)
         )
         self.train_loss_curve = self.train_loss_graph.plot(
             pen=pyqtgraph.mkPen(color=(44, 106, 180), width=3, style=QtCore.Qt.DotLine)
         )
         self.validation_accuracy_curve = self.validation_accuracy_graph.plot(
-            pen=pyqtgraph.mkPen(
-                color=(145, 122, 184), width=4, style=QtCore.Qt.SolidLine
-            )
+            pen=pyqtgraph.mkPen(color=(145, 122, 184), width=4, style=QtCore.Qt.SolidLine)
         )
         self.validation_loss_curve = self.validation_loss_graph.plot(
-            pen=pyqtgraph.mkPen(
-                color=(203, 26, 126), width=3, style=QtCore.Qt.SolidLine
-            )
+            pen=pyqtgraph.mkPen(color=(203, 26, 126), width=3, style=QtCore.Qt.SolidLine)
         )
 
         # Set style for name of axis.
@@ -105,9 +101,7 @@ class Main(QWidget):
         # Set name for axis.
         self.train_accuracy_graph.setLabel("left", "Train Accuracy", **label_style)
         self.train_loss_graph.setLabel("left", "Train Loss", **label_style)
-        self.validation_accuracy_graph.setLabel(
-            "left", "Validation Accuracy", **label_style
-        )
+        self.validation_accuracy_graph.setLabel("left", "Validation Accuracy", **label_style)
         self.validation_loss_graph.setLabel("left", "Validation Loss", **label_style)
         self.train_accuracy_graph.setLabel("bottom", "Epoch", **label_style)
         self.train_loss_graph.setLabel("bottom", "Epoch", **label_style)
@@ -115,30 +109,18 @@ class Main(QWidget):
         self.validation_loss_graph.setLabel("bottom", "Epoch", **label_style)
 
         # Set font and gradation of axis.
-        self.train_accuracy_graph.getAxis("bottom").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
-        self.train_loss_graph.getAxis("bottom").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
+        self.train_accuracy_graph.getAxis("bottom").setStyle(tickFont=font_tick, tickTextOffset=6)
+        self.train_loss_graph.getAxis("bottom").setStyle(tickFont=font_tick, tickTextOffset=6)
         self.validation_accuracy_graph.getAxis("bottom").setStyle(
             tickFont=font_tick, tickTextOffset=6
         )
-        self.validation_loss_graph.getAxis("bottom").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
-        self.train_accuracy_graph.getAxis("left").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
-        self.train_loss_graph.getAxis("left").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
+        self.validation_loss_graph.getAxis("bottom").setStyle(tickFont=font_tick, tickTextOffset=6)
+        self.train_accuracy_graph.getAxis("left").setStyle(tickFont=font_tick, tickTextOffset=6)
+        self.train_loss_graph.getAxis("left").setStyle(tickFont=font_tick, tickTextOffset=6)
         self.validation_accuracy_graph.getAxis("left").setStyle(
             tickFont=font_tick, tickTextOffset=6
         )
-        self.validation_loss_graph.getAxis("left").setStyle(
-            tickFont=font_tick, tickTextOffset=6
-        )
+        self.validation_loss_graph.getAxis("left").setStyle(tickFont=font_tick, tickTextOffset=6)
 
         # Generate Data Indicator Group Box.
         self.groupbox_epoch = QGroupBox("Epoch")
@@ -251,11 +233,34 @@ class Main(QWidget):
         self.validation_accuracy_graph.enableAutoRange(axis="y")
         self.validation_loss_graph.enableAutoRange(axis="y")
 
+        self.timer = QTimer()
+        self.timer.setInterval(1)
+        self.timer.timeout.connect(self.update)
+        self.timer.start()
+
         self.show()
 
     @pyqtSlot()
     def update(self):
-        pass
+        self.train_accuracy_curve.setData(self.epoch, self.train_accuracy)
+        self.train_loss_curve.setData(self.epoch, self.train_loss)
+        self.validation_accuracy_curve.setData(self.epoch, self.validation_accuracy)
+        self.validation_loss_curve.setData(self.epoch, self.validation_loss)
+
+        self.label_epoch.setText(str(self.epoch[-1]))
+        self.label_train_accuracy.setText(str(self.train_accuracy[-1]))
+        self.label_train_loss.setText(str(self.train_loss[-1]))
+        self.label_validation_accuracy.setText(str(self.validation_accuracy[-1]))
+        self.label_validation_loss.setText(str(self.validation_loss[-1]))
+
+    def update_metrics(
+        self, epoch, train_accuracy, train_loss, validation_accuracy, validation_loss
+    ):
+        self.epoch = epoch
+        self.train_accuracy = train_accuracy
+        self.train_loss = train_loss
+        self.validation_accuracy = validation_accuracy
+        self.validation_loss = validation_loss
 
 
 if __name__ == "__main__":
