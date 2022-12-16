@@ -37,17 +37,35 @@ def get_dataset(path):
     return features, label
 
 
+def preprocess(data):
+    """
+    Function for preprocessing image data.
+
+    Parameters
+    ----------
+        data : ndarray
+            image data.
+
+    Returns
+    -------
+        preprocessed : ndarray
+            preprocessed image data.
+    """
+    preprocessed = data / 225.0
+    return preprocessed
+
+
 # For debugging
 if __name__ == "__main__":
-    image, label = get_dataset("./data/train.csv")
+    images, labels = get_dataset("./data/train.csv")
 
-    print(image.shape)
-    print(label.shape)
+    print(images.shape)
+    print(labels.shape)
 
-    print(type(image))
-    print(type(label))
+    print(type(images))
+    print(type(labels))
 
-    x = np.asarray(image[0], dtype=np.uint8)
+    x = np.asarray(images[0], dtype=np.uint8)
     x = np.reshape(x, (28, 28))
 
     pil_image = Image.fromarray(x)
