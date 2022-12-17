@@ -1,3 +1,7 @@
+import tensorflow as tf
+
+
+@tf.function
 def test_epoch(
     data_loader,
     model,
@@ -40,5 +44,8 @@ def test_epoch(
 
     test_loss = test_metrics_loss.result()
     test_accuracy = test_metrics_accuracy.result()
+
+    test_loss = test_loss.numpy()
+    test_accuracy = test_accuracy.numpy()
 
     return test_loss, test_accuracy
