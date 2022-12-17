@@ -35,7 +35,7 @@ class Model(tf.keras.Model):
         self.conv1 = tf.keras.layers.Conv2D(32, 3, activation="relu")
         self.flatten = tf.keras.layers.Flatten()
         self.dense1 = tf.keras.layers.Dense(128, activation="relu")
-        self.dense2 = tf.keras.layers.Dense(10, activation="softmax")
+        self.dense2 = tf.keras.layers.Dense(10)
 
     def call(self, inputs, training=None, mask=None):
         """
@@ -56,6 +56,7 @@ class Model(tf.keras.Model):
                 output of the model.
         """
         x = self.conv1(inputs)
+        x = self.flatten(x)
         x = self.dense1(x)
         output = self.dense2(x)
         return output
