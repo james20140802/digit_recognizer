@@ -49,3 +49,19 @@ def test_epoch(
     test_accuracy = test_accuracy.numpy()
 
     return test_loss, test_accuracy
+
+
+def sample_test(data_loader, model):
+    dataset_temp = data_loader.shuffle(
+        1000, reshuffle_each_iteration=True
+    ).unbatch()
+    dataset_temp = list(dataset_temp.as_numpy_iterator())
+
+    sample_data, sample_label = dataset_temp[0]
+    sample_prediction = model(sample_data[tf.newaxis, ...], training=False)
+
+    sample_prediction = tf.math.argmax(
+        tf.squeeze(tf.nn.softmax(sample_prediction))
+    ).numpy()
+
+    return sample_data, sample_label, sample_prediction
