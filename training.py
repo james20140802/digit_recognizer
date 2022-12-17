@@ -2,6 +2,7 @@
 import tensorflow as tf
 
 
+@tf.function
 def train_epoch(
     data_loader,
     model,
@@ -41,7 +42,7 @@ def train_epoch(
             predictions = model(images, training=True)
             loss = loss_object(labels, predictions)
         gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradient(zip(gradients, model.trainable_variables))
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
         # Update state of metircs.
         train_metrics_loss(loss)
@@ -49,5 +50,8 @@ def train_epoch(
 
     train_loss = train_metrics_loss.result()
     train_accuracy = train_metrics_accuracy.result()
+
+    train_loss = train_loss.numpy()
+    train_accuracy = train_accuracy.numpy()
 
     return train_loss, train_accuracy
